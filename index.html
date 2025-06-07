@@ -3,45 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HTML Toolbox</title>
+  <title>Araç Yakıt Hesaplayıcı</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 600px;
+      max-width: 400px;
       margin: 40px auto;
       padding: 0 20px;
       line-height: 1.6;
     }
-    h1 { text-align: center; }
-    ul { list-style: none; padding: 0; }
-    li {
-      background: #f4f4f4;
-      margin: 10px 0;
-      padding: 12px 16px;
-      border-radius: 4px;
+    h2 { text-align: center; }
+    label { display: block; margin-top: 15px; }
+    input, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
     }
-    a {
-      text-decoration: none;
-      color: #333;
+    button { margin-top: 20px; }
+    #sonuc {
+      margin-top: 20px;
       font-weight: bold;
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 4px;
+      text-align: center;
     }
-    a:hover { color: #007acc; }
   </style>
 </head>
 <body>
-  <h1>HTML Toolbox</h1>
-  <p>Bu sayfadan tüm mini uygulamalarınıza erişebilirsiniz:</p>
-  <ul>
-    <li><a href="trafik-itiraz/">Trafik Cezası İtiraz Dilekçesi Oluşturucu</a></li>
-    <li><a href="yakit-hesaplayici/">Yakıt Tüketimi &amp; Maliyet Hesaplayıcı</a></li>
-    <li><a href="parola-yonetici/">Offline Parola Yöneticisi</a></li>
-    <li><a href="sifre-uretici.html">Rastgele Şifre Üreteci</a></li>
-    <!-- Yeni projeler eklendikçe buraya <li> ile satır ekleyin -->
-  </ul>
-  <footer>
-    <p style="text-align:center; font-size:0.9em; margin-top:40px;">
-      © 2025 Hukuk Otomasyonları
-    </p>
-  </footer>
+  <h2>Araç Yakıt Hesaplayıcı</h2>
+
+  <label for="tuketim">100 km'de tüketim (litre):</label>
+  <input type="number" id="tuketim" placeholder="Örn: 6.5">
+
+  <label for="fiyat">Yakıtın litre fiyatı (TL):</label>
+  <input type="number" id="fiyat" placeholder="Örn: 40.00">
+
+  <label for="mesafe">Gidilecek mesafe (km):</label>
+  <input type="number" id="mesafe" placeholder="Örn: 350">
+
+  <button onclick="hesapla()">Hesapla</button>
+
+  <div id="sonuc">Sonuç burada görünecek.</div>
+
+  <script>
+    function hesapla() {
+      const tuketim = parseFloat(document.getElementById("tuketim").value);
+      const fiyat   = parseFloat(document.getElementById("fiyat").value);
+      const mesafe  = parseFloat(document.getElementById("mesafe").value);
+
+      if (isNaN(tuketim) || isNaN(fiyat) || isNaN(mesafe)) {
+        document.getElementById("sonuc").textContent = "Lütfen tüm değerleri doğru girin.";
+        return;
+      }
+
+      const toplamLitre = (tuketim * mesafe) / 100;
+      const toplamTutar = toplamLitre * fiyat;
+
+      document.getElementById("sonuc").innerHTML =
+        `🔹 Tahmini Tüketim: <strong>${toplamLitre.toFixed(2)} litre</strong><br>` +
+        `🔸 Yakıt Maliyeti: <strong>${toplamTutar.toFixed(2)} TL</strong>`;
+    }
+  </script>
 </body>
 </html>
