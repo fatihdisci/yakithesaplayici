@@ -1,67 +1,135 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Araç Yakıt Hesaplayıcı</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Yakıt Tüketimi Hesaplayıcı</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 400px;
-      margin: 40px auto;
-      padding: 0 20px;
-      line-height: 1.6;
+    :root {
+      --bg: #121212;
+      --card: #1e1e1e;
+      --text: #ffffff;
+      --accent: #4caf50;
+      --input-bg: #2a2a2a;
     }
-    h2 { text-align: center; }
-    label { display: block; margin-top: 15px; }
-    input, button {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
+
+    * {
       box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
     }
-    button { margin-top: 20px; }
+
+    body {
+      margin: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: var(--card);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: var(--accent);
+    }
+
+    label {
+      display: block;
+      margin-top: 16px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--input-bg);
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 24px;
+      padding: 12px;
+      background-color: var(--accent);
+      color: #fff;
+      border: none;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #388e3c;
+    }
+
     #sonuc {
       margin-top: 20px;
-      font-weight: bold;
-      background: #f9f9f9;
-      padding: 12px;
-      border-radius: 4px;
+      background-color: #2e2e2e;
+      padding: 16px;
+      border-radius: 6px;
+      font-size: 16px;
       text-align: center;
+      min-height: 48px;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <h2>Araç Yakıt Hesaplayıcı</h2>
+  <div class="container">
+    <h2>Yakıt Tüketimi Hesaplayıcı</h2>
 
-  <label for="tuketim">100 km'de tüketim (litre):</label>
-  <input type="number" id="tuketim" placeholder="Örn: 6.5">
+    <label for="tuketim">100 km'de tüketim (litre):</label>
+    <input type="number" id="tuketim" placeholder="Örn: 6.5" />
 
-  <label for="fiyat">Yakıtın litre fiyatı (TL):</label>
-  <input type="number" id="fiyat" placeholder="Örn: 40.00">
+    <label for="fiyat">Yakıtın litre fiyatı (TL):</label>
+    <input type="number" id="fiyat" placeholder="Örn: 40.00" />
 
-  <label for="mesafe">Gidilecek mesafe (km):</label>
-  <input type="number" id="mesafe" placeholder="Örn: 350">
+    <label for="mesafe">Gidilecek mesafe (km):</label>
+    <input type="number" id="mesafe" placeholder="Örn: 350" />
 
-  <button onclick="hesapla()">Hesapla</button>
+    <button onclick="hesapla()">Hesapla</button>
 
-  <div id="sonuc">Sonuç burada görünecek.</div>
+    <div id="sonuc">Sonuç burada görünecek</div>
+  </div>
 
   <script>
     function hesapla() {
       const tuketim = parseFloat(document.getElementById("tuketim").value);
-      const fiyat   = parseFloat(document.getElementById("fiyat").value);
-      const mesafe  = parseFloat(document.getElementById("mesafe").value);
+      const fiyat = parseFloat(document.getElementById("fiyat").value);
+      const mesafe = parseFloat(document.getElementById("mesafe").value);
+
+      const sonucEl = document.getElementById("sonuc");
 
       if (isNaN(tuketim) || isNaN(fiyat) || isNaN(mesafe)) {
-        document.getElementById("sonuc").textContent = "Lütfen tüm değerleri doğru girin.";
+        sonucEl.textContent = "Lütfen tüm alanları doldurunuz.";
         return;
       }
 
       const toplamLitre = (tuketim * mesafe) / 100;
       const toplamTutar = toplamLitre * fiyat;
 
-      document.getElementById("sonuc").innerHTML =
+      sonucEl.innerHTML =
         `🔹 Tahmini Tüketim: <strong>${toplamLitre.toFixed(2)} litre</strong><br>` +
         `🔸 Yakıt Maliyeti: <strong>${toplamTutar.toFixed(2)} TL</strong>`;
     }
