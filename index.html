@@ -49,14 +49,6 @@
   <div class="container my-3">
     <h2 class="text-center mb-3">Yol Bilgisayarı</h2>
     <div class="mb-3">
-      <label for="model" class="form-label">Araç Modeli</label>
-      <select id="model" class="form-select"></select>
-    </div>
-    <div class="input-group mb-3">
-      <input type="text" id="newModel" class="form-control" placeholder="Marka Model">
-      <button id="addVehicle" type="button" class="btn btn-outline-primary">Araç Ekle</button>
-    </div>
-    <div class="mb-3">
       <label for="tuketim" class="form-label">100 km'de tüketim (L)</label>
       <input type="number" inputmode="decimal" step="0.1" id="tuketim" class="form-control" placeholder="Örn: 6.5">
       <div class="invalid-feedback">Lütfen bu alanı doldurun.</div>
@@ -94,12 +86,24 @@
       <input type="number" inputmode="decimal" step="0.1" id="lastikKm" class="form-control">
     </div>
     <div class="mb-3">
+      <label for="akuTarihi" class="form-label">Akü Değişim Tarihi</label>
+      <input type="date" id="akuTarihi" class="form-control">
+    </div>
+    <div class="mb-3">
       <label for="bakimTarihi" class="form-label">Bakım Tarihi</label>
       <input type="date" id="bakimTarihi" class="form-control">
     </div>
     <button id="saveVehicle" type="button" class="btn btn-primary w-100">Kaydet</button>
     </div>
     <div id="aracBilgiSonuc" class="mt-3 p-3 border rounded">Bilgiler burada görünecek</div>
+    <div class="mb-3 mt-3">
+      <label for="model" class="form-label">Araç Modeli</label>
+      <select id="model" class="form-select"></select>
+    </div>
+    <div class="input-group mb-3">
+      <input type="text" id="newModel" class="form-control" placeholder="Marka Model">
+      <button id="addVehicle" type="button" class="btn btn-outline-primary">Araç Ekle</button>
+    </div>
   </div>
 
   <script id="chartJs" data-src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -257,11 +261,12 @@
       const idx=document.getElementById('model').value;
       if(idx==='') return;
       const vehicles=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
-      vehicles[idx].info={
-        lastikTarihi:lastikTarihi.value,
-        lastikKm:lastikKm.value,
-        bakimTarihi:bakimTarihi.value
-      };
+        vehicles[idx].info={
+          lastikTarihi:lastikTarihi.value,
+          lastikKm:lastikKm.value,
+          akuTarihi:akuTarihi.value,
+          bakimTarihi:bakimTarihi.value
+        };
       localStorage.setItem(vehicleKey,JSON.stringify(vehicles));
       gosterAracBilgileri();
     }
@@ -273,17 +278,20 @@
       const vehicles=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
       if(idx===''||!vehicles[idx]||!vehicles[idx].info){
         form.style.display='block';
+        document.getElementById('saveVehicle').textContent='Kaydet';
         container.textContent='Henüz kayıt yok.';
         return;
       }
       const info=vehicles[idx].info;
       form.style.display='none';
-      container.innerHTML=`🔧 Lastik Tarihi: <strong>${info.lastikTarihi||'-'}</strong><br>🏁 Lastik KM: <strong>${info.lastikKm||'-'}</strong><br>🔨 Bakım Tarihi: <strong>${info.bakimTarihi||'-'}</strong><br><button id="editInfo" type="button" class="btn btn-secondary mt-2">Güncelle</button>`;
+      container.innerHTML=`🚗 Model: <strong>${vehicles[idx].model}</strong><br>🔧 Lastik Tarihi: <strong>${info.lastikTarihi||'-'}</strong><br>🔋 Akü Tarihi: <strong>${info.akuTarihi||'-'}</strong><br>🏁 Lastik KM: <strong>${info.lastikKm||'-'}</strong><br>🔨 Bakım Tarihi: <strong>${info.bakimTarihi||'-'}</strong><br><button id="editInfo" type="button" class="btn btn-secondary mt-2">Güncelle</button>`;
       document.getElementById('editInfo').addEventListener('click',()=>{
         form.style.display='block';
         lastikTarihi.value=info.lastikTarihi||'';
+        akuTarihi.value=info.akuTarihi||'';
         lastikKm.value=info.lastikKm||'';
         bakimTarihi.value=info.bakimTarihi||'';
+        document.getElementById('saveVehicle').textContent='Güncelle';
         container.textContent='';
       });
     }
