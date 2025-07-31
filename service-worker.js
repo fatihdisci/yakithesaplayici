@@ -12,8 +12,23 @@ self.addEventListener('install', e => {
   );
 });
 
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+self.addEventListener('fetch', event => {
+  // Navigation (HTML) veya manifest isteklerinde network-first
+  if (event.request.mode === 'navigate' || event.request.url.endsWith('manifest.json')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(cacheName).then(cache => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+  // Diğer kaynaklarda cache-first
+  event.respondWith(
+    caches.match(event.request).then(cached => cached || fetch(event.request))
   );
 });
+
