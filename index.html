@@ -76,7 +76,6 @@
     </div>
     <button id="calcBtn" type="button" class="btn btn-primary w-100">Hesapla</button>
     <div id="sonuc" class="mt-3 p-3 border rounded fade-in">Sonuç burada görünecek</div>
-    <button id="downloadBtn" type="button" class="btn btn-secondary w-100 mt-3">Verilerimi İndir</button>
     <canvas id="historyChart" class="mt-3"></canvas>
   </div>
 
@@ -235,20 +234,6 @@
       localStorage.setItem(historyKey,JSON.stringify(arr));
     }
 
-    function downloadCSV(){
-      const arr=JSON.parse(localStorage.getItem(historyKey)||'[]');
-      if(!arr.length) return;
-      const headers=['model','tuketim','fiyat','mesafe','yolcu','toplamTutar','tarih'];
-      const rows=[headers.join(',')].concat(arr.map(o=>headers.map(h=>o[h]||'').join(',')));
-      const blob=new Blob([rows.join('\n')],{type:'text/csv'});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;
-      a.download='veriler.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
     function renderChart(){
       const arr=JSON.parse(localStorage.getItem(historyKey)||'[]');
       const ctx=document.getElementById('historyChart').getContext('2d');
@@ -334,7 +319,6 @@
     document.getElementById('calcBtn').addEventListener('click',hesapla);
     document.getElementById('saveVehicle').addEventListener('click',kaydetAracBilgileri);
     document.getElementById('addVehicle').addEventListener('click',addVehicle);
-    document.getElementById('downloadBtn').addEventListener('click',downloadCSV);
     window.addEventListener('DOMContentLoaded',init);
 
     if('serviceWorker' in navigator){
