@@ -193,39 +193,62 @@
     }
 
     function hesapla(){
-      let valid=true;
-      inputs.forEach(id=>{
-        const el=document.getElementById(id);
-        if(!el.value){
-          el.classList.add('is-invalid');
-          valid=false;
-        }else{
-          el.classList.remove('is-invalid');
-        }
-      });
-      if(!valid) return;
+    // 1. Validasyon
+    let valid = true;
+    inputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el.value) {
+        el.classList.add('is-invalid');
+        valid = false;
+      } else {
+        el.classList.remove('is-invalid');
+      }
+    });
+    if (!valid) return;
 
-      const tuketim=parseFloat(tuketim.value);
-      const fiyat=parseFloat(fiyat.value);
-      const mesafe=parseFloat(mesafe.value);
-      const yolcu=parseFloat(yolcu.value)||1;
+    // 2. Eleman referanslarını al ve sayısal değerlere dönüştür
+    const tuketimEl = document.getElementById('tuketim');
+    const fiyatEl   = document.getElementById('fiyat');
+    const mesafeEl  = document.getElementById('mesafe');
+    const yolcuEl   = document.getElementById('yolcu');
 
-      const toplamLitre=(tuketim*mesafe)/100;
-      const toplamTutar=toplamLitre*fiyat;
-      const kisiBasi=toplamTutar/yolcu;
-      const co2=toplamLitre*2.31;
+    const tuketimVal = parseFloat(tuketimEl.value);
+    const fiyatVal   = parseFloat(fiyatEl.value);
+    const mesafeVal  = parseFloat(mesafeEl.value);
+    const yolcuVal   = parseFloat(yolcuEl.value) || 1;
 
-      const sonucEl=document.getElementById('sonuc');
-      sonucEl.style.opacity=0;
-      sonucEl.innerHTML=`🔹 Tüketim: <strong>${toplamLitre.toFixed(2)} L</strong><br>🔸 Maliyet: <strong>${toplamTutar.toFixed(2)} TL</strong><br>👥 Kişi Başı: <strong>${kisiBasi.toFixed(2)} TL</strong><br>🌍 ≈ ${co2.toFixed(1)} kg CO₂`;
-      setTimeout(()=>{sonucEl.style.opacity=1},10);
+    // 3. Hesaplamalar
+    const toplamLitre = (tuketimVal * mesafeVal) / 100;
+    const toplamTutar = toplamLitre * fiyatVal;
+    const kisiBasi    = toplamTutar / yolcuVal;
+    const co2         = toplamLitre * 2.31;
 
-      const idx=document.getElementById('model').value;
-      const vehicles=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
-      const model=vehicles[idx]?vehicles[idx].model:'';
-      saveHistory({model, tuketim, fiyat, mesafe, yolcu, toplamTutar, tarih:new Date().toISOString()});
-      renderChart();
-      saveFormData();
+    // 4. Sonucu göster
+    const sonucEl = document.getElementById('sonuc');
+    sonucEl.style.opacity = 0;
+    sonucEl.innerHTML = `
+      🔹 Tüketim: <strong>${toplamLitre.toFixed(2)} L</strong><br>
+      🔸 Maliyet: <strong>${toplamTutar.toFixed(2)} TL</strong><br>
+      👥 Kişi Başı: <strong>${kisiBasi.toFixed(2)} TL</strong><br>
+      🌍 ≈ ${co2.toFixed(1)} kg CO₂
+    `;
+    setTimeout(() => sonucEl.style.opacity = 1, 10);
+
+    // 5. Geçmişe kaydet ve grafik güncelle
+    const idx = document.getElementById('model').value;
+    const vehicles = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
+    const model = vehicles[idx] ? vehicles[idx].model : '';
+    saveHistory({
+      model,
+      tuketim: tuketimVal,
+      fiyat: fiyatVal,
+      mesafe: mesafeVal,
+      yolcu: yolcuVal,
+      toplamTutar,
+      tarih: new Date().toISOString()
+    });
+    renderChart();
+    saveFormData();
     }
 
     function saveHistory(item){
