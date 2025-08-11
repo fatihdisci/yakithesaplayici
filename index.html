@@ -327,12 +327,12 @@
       init(); // <— kritik: DOMContentLoaded kaçırılırsa hemen başlat
     }
 
-    // Service Worker (isteğe bağlı)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js');
-      });
-    }
-  </script>
+   <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js?v=5'); // önemli
+  });
+}
+</script>
 </body>
 </html>
