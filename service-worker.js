@@ -1,34 +1,52 @@
-const cacheName = 'yol-v1';
-const filesToCache = [
-  '.',
+// Basit fakat güvenli PWA SW
+const CACHE = 'yol-v2'; // sürüm artır
+const PRECACHE = [
+  './',
   'index.html',
   'apple-touch-icon.png',
   'manifest.json'
 ];
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(cacheName).then(cache => cache.addAll(filesToCache))
+// Install: dosyaları önbelleğe al
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE))
   );
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', event => {
-  // Navigation (HTML) veya manifest isteklerinde network-first
-  if (event.request.mode === 'navigate' || event.request.url.endsWith('manifest.json')) {
+// Activate: eski cache’leri temizle
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.map((k) => (k !== CACHE ? caches.delete(k) : null)))
+    )
+  );
+  self.clients.claim();
+});
+
+// Fetch stratejisi:
+// - Navigasyon ve manifest: network-first (çevrimdışıysa cache)
+// - Diğer tüm istekler: cache-first, yoksa network
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const isNavigate = request.mode === 'navigate';
+  const isManifest = request.url.endsWith('manifest.json');
+
+  if (isNavigate || isManifest) {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          const copy = response.clone();
-          caches.open(cacheName).then(cache => cache.put(event.request, copy));
-          return response;
+      fetch(request)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(request, copy));
+          return res;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match(request))
     );
     return;
   }
-  // Diğer kaynaklarda cache-first
+
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    caches.match(request).then((cached) => cached || fetch(request))
   );
 });
-
