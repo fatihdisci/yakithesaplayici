@@ -10,7 +10,7 @@
   <link id="bootstrapCss" rel="stylesheet" data-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" />
   <link id="manifestLink" rel="manifest" data-href="manifest.json" />
 
-  <!-- Basit cache-busting sadece harici linkler için -->
+  <!-- Basit cache-busting: harici linklere zaman damgası ekle -->
   <script>
     (function () {
       const v = new Date().toISOString().replace(/[^0-9]/g, "");
@@ -130,7 +130,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // ---- Sabitler ----
+    // ===== Sabitler =====
     const inputs = ['tuketim','fiyat','mesafe','yolcu'];
     const historyKey = 'gecmisHesap';
     const vehicleKey = 'araclar';
@@ -143,17 +143,18 @@
       en:{ calc:'Calculate', result:'Result will appear here', vehicleInfo:'Vehicle Info', export:'Export (CSV)', clear:'Clear History' }
     };
 
-    // ---- Yardımcılar ----
+    // ===== Yardımcılar =====
+    const qs  = (s, r=document) => r.querySelector(s);
     const themeColor = () => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-    const qs = (s, r=document) => r.querySelector(s);
 
     function normalizeDecimal(v){ if (typeof v !== 'string') v = String(v ?? ''); return v.replace(',', '.').replace(/[^\d.]/g, ''); }
     function toPosFloat(el){ const n = parseFloat(normalizeDecimal(el.value)); return (Number.isFinite(n) && n > 0) ? n : null; }
     function showInvalid(el, ok){ el.classList.toggle('is-invalid', !ok); }
 
-    // ---- Tema/Dil ----
+    // ===== Tema/Dil =====
     function initTheme(){
-      const saved = localStorage.getItem(themeKey) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      const prefersDark = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      const saved = localStorage.getItem(themeKey) || (prefersDark ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', saved);
       qs('#themeBtn').textContent = saved === 'dark' ? '☀️' : '🌙';
     }
@@ -171,136 +172,146 @@
 
     function setLang(l){
       localStorage.setItem(langKey, l);
-      qs('#calcTitle').textContent = langData[l].calcTitle || 'Yol Bilgisayarı';
       qs('#vehicleTitle').textContent = langData[l].vehicleInfo;
-      qs('#calcBtn').textContent = langData[l].calc;
-      qs('#exportBtn').textContent = langData[l].export;
+      qs('#calcBtn').textContent      = langData[l].calc;
+      qs('#exportBtn').textContent    = langData[l].export;
       qs('#clearHistoryBtn').textContent = langData[l].clear;
-      qs('#sonuc').textContent = langData[l].result;
-      qs('#langBtn').textContent = l === 'tr' ? 'EN' : 'TR';
+      qs('#sonuc').textContent        = langData[l].result;
+      qs('#langBtn').textContent      = l === 'tr' ? 'EN' : 'TR';
+      // Başlık sabit kalsın:
+      qs('#calcTitle').textContent = 'Yol Bilgisayarı';
     }
     function initLang(){ setLang(localStorage.getItem(langKey) || 'tr'); }
     function toggleLang(){ setLang((localStorage.getItem(langKey) || 'tr') === 'tr' ? 'en' : 'tr'); }
 
-    // ---- Form ----
-    function saveFormData(){ const data = {}; inputs.forEach(id => data[id] = qs('#'+id).value); localStorage.setItem(formKey, JSON.stringify(data)); }
-    function loadFormData(){ const raw = localStorage.getItem(formKey); if (!raw) return; const obj = JSON.parse(raw); inputs.forEach(id => { if (obj[id] != null) qs('#'+id).value = obj[id]; }); }
+    // ===== Form =====
+    function saveFormData(){ const data={}; inputs.forEach(id => data[id]=qs('#'+id).value); localStorage.setItem(formKey, JSON.stringify(data)); }
+    function loadFormData(){ const raw=localStorage.getItem(formKey); if(!raw) return; const obj=JSON.parse(raw); inputs.forEach(id=>{ if(obj[id]!=null) qs('#'+id).value=obj[id]; }); }
 
-    // ---- Hesaplama ----
+    // ===== Hesaplama =====
     function hesapla(){
-      const elT = qs('#tuketim'), elF = qs('#fiyat'), elM = qs('#mesafe'), elY = qs('#yolcu');
-      const tV = toPosFloat(elT), fV = toPosFloat(elF), mV = toPosFloat(elM);
-      const yV = Math.max(1, parseInt(elY.value || '1', 10));
-      showInvalid(elT, !!tV); showInvalid(elF, !!fV); showInvalid(elM, !!mV); showInvalid(elY, Number.isInteger(yV) && yV >= 1);
-      if (!tV || !fV || !mV || !(yV >= 1)) return;
+      const elT=qs('#tuketim'), elF=qs('#fiyat'), elM=qs('#mesafe'), elY=qs('#yolcu');
+      const tV=toPosFloat(elT), fV=toPosFloat(elF), mV=toPosFloat(elM);
+      const yV=Math.max(1, parseInt(elY.value||'1',10));
+      showInvalid(elT,!!tV); showInvalid(elF,!!fV); showInvalid(elM,!!mV); showInvalid(elY,Number.isInteger(yV)&&yV>=1);
+      if(!tV||!fV||!mV||!(yV>=1)) return;
 
-      const toplamLitre = (tV * mV) / 100;
-      const toplamTutar = toplamLitre * fV;
-      const kisiBasi    = toplamTutar / yV;
-      const co2         = toplamLitre * 2.31;
+      const toplamLitre=(tV*mV)/100;
+      const toplamTutar=toplamLitre*fV;
+      const kisiBasi=toplamTutar/yV;
+      const co2=toplamLitre*2.31;
 
-      const s = qs('#sonuc');
+      const s=qs('#sonuc');
       s.classList.remove('show');
-      s.innerHTML = '🔹 Tüketim: <strong>'+toplamLitre.toFixed(2)+' L</strong><br>' +
-                    '🔸 Maliyet: <strong>'+toplamTutar.toFixed(2)+' TL</strong><br>' +
-                    '👥 Kişi Başı: <strong>'+kisiBasi.toFixed(2)+' TL</strong><br>' +
-                    '🌍 ≈ '+co2.toFixed(1)+' kg CO₂';
-      setTimeout(()=>s.classList.add('show'), 10);
+      s.innerHTML=`
+        🔹 Tüketim: <strong>${toplamLitre.toFixed(2)} L</strong><br>
+        🔸 Maliyet: <strong>${toplamTutar.toFixed(2)} TL</strong><br>
+        👥 Kişi Başı: <strong>${kisiBasi.toFixed(2)} TL</strong><br>
+        🌍 ≈ ${co2.toFixed(1)} kg CO₂
+      `;
+      setTimeout(()=>s.classList.add('show'),10);
 
-      const idx = qs('#model').value;
-      const vehicles = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
-      const model = vehicles[idx]?.model || '';
-      saveHistory({ model, tuketim:tV, fiyat:fV, mesafe:mV, yolcu:yV, toplamTutar, tarih:new Date().toISOString() });
+      const idx=qs('#model').value;
+      const vehicles=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
+      const model=vehicles[idx]?.model||'';
+      saveHistory({model,tuketim:tV,fiyat:fV,mesafe:mV,yolcu:yV,toplamTutar,tarih:new Date().toISOString()});
       renderChart();
       saveFormData();
     }
 
-    function saveHistory(item){ const arr = JSON.parse(localStorage.getItem(historyKey) || '[]'); arr.push(item); localStorage.setItem(historyKey, JSON.stringify(arr)); }
+    function saveHistory(item){
+      const arr=JSON.parse(localStorage.getItem(historyKey)||'[]');
+      arr.push(item);
+      localStorage.setItem(historyKey, JSON.stringify(arr));
+    }
 
     function renderChart(){
-      const arr = JSON.parse(localStorage.getItem(historyKey) || '[]');
-      const ctx = qs('#historyChart').getContext('2d');
-      if (window.historyChart) window.historyChart.destroy();
-      if (!arr.length) return;
-      window.historyChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels: arr.map(a => new Date(a.tarih).toLocaleString()),
-                datasets: [{ label: 'Maliyet (TL)', data: arr.map(a => a.toplamTutar), borderWidth: 2, borderColor: themeColor(), pointRadius: 2, tension: 0.25 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      const arr=JSON.parse(localStorage.getItem(historyKey)||'[]');
+      const ctx=qs('#historyChart').getContext('2d');
+      if(window.historyChart) window.historyChart.destroy();
+      if(!arr.length) return;
+      window.historyChart=new Chart(ctx,{
+        type:'line',
+        data:{
+          labels:arr.map(a=>new Date(a.tarih).toLocaleString()),
+          datasets:[{label:'Maliyet (TL)', data:arr.map(a=>a.toplamTutar), borderWidth:2, borderColor:themeColor(), pointRadius:2, tension:0.25}]
+        },
+        options:{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}}}
       });
     }
 
-    // ---- Araç Bilgileri ----
+    // ===== Araç Bilgileri =====
     function loadVehicles(){
-      const select = qs('#model');
-      const stored = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
-      select.innerHTML = '<option value="">Seçiniz</option>';
-      stored.forEach((v,i)=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=v.model; select.appendChild(opt); });
+      const select=qs('#model');
+      const stored=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
+      select.innerHTML='<option value="">Seçiniz</option>';
+      stored.forEach((v,i)=>{const opt=document.createElement('option'); opt.value=i; opt.textContent=v.model; select.appendChild(opt);});
       select.addEventListener('change', gosterAracBilgileri);
     }
 
     function addVehicle(){
-      const input = qs('#newModel'); const model = input.value.trim(); if (!model) return;
-      const vehicles = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
-      if (!vehicles.some(v => v.model.toLowerCase() === model.toLowerCase())){
-        vehicles.push({ model });
+      const input=qs('#newModel'); const model=input.value.trim(); if(!model) return;
+      const vehicles=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
+      if(!vehicles.some(v=>v.model.toLowerCase()===model.toLowerCase())){
+        vehicles.push({model});
         localStorage.setItem(vehicleKey, JSON.stringify(vehicles));
-        input.value = ''; loadVehicles(); qs('#model').value = vehicles.length - 1; gosterAracBilgileri();
+        input.value=''; loadVehicles(); qs('#model').value=vehicles.length-1; gosterAracBilgileri();
       } else { input.focus(); }
     }
 
     function kaydetAracBilgileri(){
-      const idx = qs('#model').value; if (idx === '') return;
-      const vehicles = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
-      const lt = qs('#lastikTarihi'), lk = qs('#lastikKm'), at = qs('#akuTarihi'), bt = qs('#bakimTarihi');
-      vehicles[idx].info = { lastikTarihi: lt.value || '', lastikKm: lk.value || '', akuTarihi: at.value || '', bakimTarihi: bt.value || '' };
+      const idx=qs('#model').value; if(idx==='') return;
+      const vehicles=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
+      const lt=qs('#lastikTarihi'), lk=qs('#lastikKm'), at=qs('#akuTarihi'), bt=qs('#bakimTarihi');
+      vehicles[idx].info={lastikTarihi:lt.value||'', lastikKm:lk.value||'', akuTarihi:at.value||'', bakimTarihi:bt.value||''};
       localStorage.setItem(vehicleKey, JSON.stringify(vehicles));
       gosterAracBilgileri();
     }
 
     function gosterAracBilgileri(){
-      const idx = qs('#model').value;
-      const container = qs('#aracBilgiSonuc');
-      const form = qs('#aracForm');
-      const vehicles = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
-      if (idx === '' || !vehicles[idx] || !vehicles[idx].info){
-        form.style.display = 'block';
-        qs('#saveVehicle').textContent = 'Kaydet';
-        container.textContent = 'Henüz kayıt yok.';
+      const idx=qs('#model').value;
+      const container=qs('#aracBilgiSonuc');
+      const form=qs('#aracForm');
+      const vehicles=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
+      if(idx===''||!vehicles[idx]||!vehicles[idx].info){
+        form.style.display='block';
+        qs('#saveVehicle').textContent='Kaydet';
+        container.textContent='Henüz kayıt yok.';
         return;
       }
-      const info = vehicles[idx].info;
-      form.style.display = 'none';
-      container.innerHTML = '🚗 Model: <strong>'+vehicles[idx].model+'</strong><br>' +
-                            '🔧 Lastik Tarihi: <strong>'+(info.lastikTarihi || '-')+'</strong><br>' +
-                            '🔋 Akü Tarihi: <strong>'+(info.akuTarihi || '-')+'</strong><br>' +
-                            '🏁 Lastik KM: <strong>'+(info.lastikKm || '-')+'</strong><br>' +
-                            '🔨 Bakım Tarihi: <strong>'+(info.bakimTarihi || '-')+'</strong><br>' +
-                            '<button id="editInfo" type="button" class="btn btn-secondary mt-2">Güncelle</button>';
-      qs('#editInfo').addEventListener('click', () => {
-        form.style.display = 'block';
-        qs('#lastikTarihi').value = info.lastikTarihi || '';
-        qs('#akuTarihi').value    = info.akuTarihi || '';
-        qs('#lastikKm').value     = info.lastikKm || '';
-        qs('#bakimTarihi').value  = info.bakimTarihi || '';
-        qs('#saveVehicle').textContent = 'Güncelle';
-        container.textContent = '';
-      }, { once:true });
+      const info=vehicles[idx].info;
+      form.style.display='none';
+      container.innerHTML=`
+        🚗 Model: <strong>${vehicles[idx].model}</strong><br>
+        🔧 Lastik Tarihi: <strong>${info.lastikTarihi||'-'}</strong><br>
+        🔋 Akü Tarihi: <strong>${info.akuTarihi||'-'}</strong><br>
+        🏁 Lastik KM: <strong>${info.lastikKm||'-'}</strong><br>
+        🔨 Bakım Tarihi: <strong>${info.bakimTarihi||'-'}</strong><br>
+        <button id="editInfo" type="button" class="btn btn-secondary mt-2">Güncelle</button>`;
+      qs('#editInfo').addEventListener('click', ()=>{
+        form.style.display='block';
+        qs('#lastikTarihi').value=info.lastikTarihi||'';
+        qs('#akuTarihi').value=info.akuTarihi||'';
+        qs('#lastikKm').value=info.lastikKm||'';
+        qs('#bakimTarihi').value=info.bakimTarihi||'';
+        qs('#saveVehicle').textContent='Güncelle';
+        container.textContent='';
+      }, {once:true});
     }
 
     function exportCSV(){
-      const arr = JSON.parse(localStorage.getItem(historyKey) || '[]'); if (!arr.length) return;
-      const headers = ['tarih','model','tuketim','fiyat','mesafe','yolcu','toplamTutar'];
-      const rows = arr.map(o => headers.map(h => (o[h] ?? '')).join(','));
-      const csv = [headers.join(','), ...rows].join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'yol-bilgisayari.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      const arr=JSON.parse(localStorage.getItem(historyKey)||'[]'); if(!arr.length) return;
+      const headers=['tarih','model','tuketim','fiyat','mesafe','yolcu','toplamTutar'];
+      const rows=arr.map(o=>headers.map(h=>(o[h]??'')).join(','));
+      const csv=[headers.join(','), ...rows].join('\n');
+      const blob=new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='yol-bilgisayari.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     }
-    function clearHistory(){ localStorage.removeItem(historyKey); if (window.historyChart) window.historyChart.destroy(); }
+    function clearHistory(){ localStorage.removeItem(historyKey); if(window.historyChart) window.historyChart.destroy(); }
 
-    // ---- Başlat ----
-    window.addEventListener('DOMContentLoaded', () => {
+    // ===== Başlat (geç kalma sorununu çözer) =====
+    function init(){
       initTheme(); initLang(); loadVehicles(); loadFormData(); gosterAracBilgileri(); renderChart();
       qs('#themeBtn').addEventListener('click', toggleTheme);
       qs('#langBtn').addEventListener('click', toggleLang);
@@ -309,9 +320,19 @@
       qs('#addVehicle').addEventListener('click', addVehicle);
       qs('#exportBtn').addEventListener('click', exportCSV);
       qs('#clearHistoryBtn').addEventListener('click', clearHistory);
-    });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init(); // <— kritik: DOMContentLoaded kaçırılırsa hemen başlat
+    }
 
-    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js'); }); }
+    // Service Worker (isteğe bağlı)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
   </script>
 </body>
 </html>
