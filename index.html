@@ -1,29 +1,27 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Yol Bilgisayarı</title>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link id="bootstrapCss" rel="stylesheet" data-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
-  <link id="manifestLink" rel="manifest" data-href="manifest.json">
 
-<script>
-    (function(){
-      const v = new Date().toISOString().replace(/[^0-9]/g, '');
+  <!-- PWA -->
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link id="bootstrapCss" rel="stylesheet" data-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" />
+  <link id="manifestLink" rel="manifest" data-href="manifest.json" />
+
+  <!-- Basit cache-busting (yalnızca kendi dosyalarımız için) -->
+  <script>
+    (function () {
+      const v = new Date().toISOString().replace(/[^0-9]/g, "");
       document.querySelectorAll('link[rel="stylesheet"][data-href]').forEach(el => {
-        el.href = el.dataset.href.split('?')[0] + '?v=' + v;
+        el.href = el.dataset.href.split("?")[0] + "?v=" + v;
       });
-      document.querySelectorAll('script[data-src]').forEach(el => {
-        el.src = el.dataset.src.split('?')[0] + '?v=' + v;
-      });
-       const mf = document.getElementById('manifestLink');
-    if (mf) mf.href = mf.dataset.href.split('?')[0] + '?v=' + v;
+      const mf = document.getElementById("manifestLink");
+      if (mf) mf.href = mf.dataset.href.split("?")[0] + "?v=" + v;
     })();
   </script>
+
   <style>
     :root[data-theme="dark"] {
       --bg: #121212;
@@ -31,321 +29,436 @@
       --text: #ffffff;
       --accent: #4caf50;
       --input-bg: #2a2a2a;
+      --border: #2c2c2c;
     }
     :root[data-theme="light"] {
       --bg: #ffffff;
-      --card: #f1f1f1;
-      --text: #000000;
+      --card: #f7f7f7;
+      --text: #111111;
       --accent: #0d6efd;
       --input-bg: #ffffff;
+      --border: #e6e6e6;
     }
+    html, body { height: 100%; }
     body {
       background-color: var(--bg);
       color: var(--text);
     }
-    .fade-in {opacity: 0; transition: opacity .4s;}
+    .card-like {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: .8rem;
+    }
+    .fade-in { opacity: 0; transition: opacity .35s ease; }
+    .fade-in.show { opacity: 1; }
   </style>
 </head>
 <body>
-  <div class="d-flex justify-content-between mb-3">
-    <button id="themeBtn" type="button" class="btn btn-secondary">🌙</button>
-    <button id="langBtn" type="button" class="btn btn-secondary">EN</button>
-  </div>
-
-  <div class="container my-3">
-    <h2 class="text-center mb-3">Yol Bilgisayarı</h2>
-    <div class="mb-3">
-      <label for="tuketim" class="form-label">100 km'de tüketim (L)</label>
-      <input type="number" inputmode="decimal" step="0.1" id="tuketim" class="form-control" placeholder="Örn: 6.5">
-      <div class="invalid-feedback">Lütfen bu alanı doldurun.</div>
-    </div>
-    <div class="mb-3">
-      <label for="fiyat" class="form-label">Yakıt Fiyatı (TL/L)</label>
-      <input type="number" inputmode="decimal" step="0.1" id="fiyat" class="form-control" placeholder="Örn: 40">
-      <div class="invalid-feedback">Lütfen bu alanı doldurun.</div>
-    </div>
-    <div class="mb-3">
-      <label for="mesafe" class="form-label">Mesafe (km)</label>
-      <input type="number" inputmode="decimal" step="0.1" id="mesafe" class="form-control" placeholder="Örn: 350">
-      <div class="invalid-feedback">Lütfen bu alanı doldurun.</div>
-    </div>
-    <div class="mb-3">
-      <label for="yolcu" class="form-label">Yolcu Sayısı</label>
-      <input type="number" inputmode="decimal" step="0.1" id="yolcu" class="form-control" value="1">
-      <div class="invalid-feedback">Lütfen bu alanı doldurun.</div>
-    </div>
-    <button id="calcBtn" type="button" class="btn btn-primary w-100">Hesapla</button>
-    <div id="sonuc" class="mt-3 p-3 border rounded fade-in">Sonuç burada görünecek</div>
-    <canvas id="historyChart" class="mt-3"></canvas>
-  </div>
-
-  <div class="container my-3">
-    <h2 class="text-center mb-3">Araç Bilgileri</h2>
-    <div class="mb-3">
-      <label for="model" class="form-label">Araç Modeli</label>
-      <select id="model" class="form-select"></select>
-    </div>
-    <div class="input-group mb-3">
-      <input type="text" id="newModel" class="form-control" placeholder="Marka Model">
-      <button id="addVehicle" type="button" class="btn btn-outline-primary">Araç Ekle</button>
-    </div>
-    <div id="aracForm">
-      <div class="mb-3">
-        <label for="lastikTarihi" class="form-label">Lastik Değişim Tarihi</label>
-        <input type="date" id="lastikTarihi" class="form-control">
+  <div class="container py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex gap-2">
+        <button id="themeBtn" type="button" class="btn btn-outline-secondary" aria-label="Tema değiştir">🌙</button>
+        <button id="langBtn" type="button" class="btn btn-outline-secondary" aria-label="Dil değiştir">EN</button>
       </div>
-    <div class="mb-3">
-      <label for="lastikKm" class="form-label">Lastik Değişim Kilometresi</label>
-      <input type="number" inputmode="decimal" step="0.1" id="lastikKm" class="form-control">
+      <div class="d-flex gap-2">
+        <button id="exportBtn" type="button" class="btn btn-outline-success">Verileri Dışa Aktar (CSV)</button>
+        <button id="clearHistoryBtn" type="button" class="btn btn-outline-danger">Geçmişi Temizle</button>
+      </div>
     </div>
-    <div class="mb-3">
-      <label for="akuTarihi" class="form-label">Akü Değişim Tarihi</label>
-      <input type="date" id="akuTarihi" class="form-control">
-    </div>
-    <div class="mb-3">
-      <label for="bakimTarihi" class="form-label">Bakım Tarihi</label>
-      <input type="date" id="bakimTarihi" class="form-control">
-    </div>
-    <button id="saveVehicle" type="button" class="btn btn-primary w-100">Kaydet</button>
-    </div>
-    <div id="aracBilgiSonuc" class="mt-3 p-3 border rounded">Bilgiler burada görünecek</div>
+
+    <!-- Yakıt Hesaplama -->
+    <section class="card-like p-3 mb-4">
+      <h2 id="calcTitle" class="h4 mb-3">Yol Bilgisayarı</h2>
+
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <label for="tuketim" class="form-label">100 km'de tüketim (L)</label>
+          <input type="text" id="tuketim" class="form-control" placeholder="Örn: 6,5" inputmode="decimal" />
+          <div class="invalid-feedback">Pozitif bir değer girin.</div>
+        </div>
+        <div class="col-sm-6">
+          <label for="fiyat" class="form-label">Yakıt Fiyatı (TL/L)</label>
+          <input type="text" id="fiyat" class="form-control" placeholder="Örn: 40,25" inputmode="decimal" />
+          <div class="invalid-feedback">Pozitif bir değer girin.</div>
+        </div>
+        <div class="col-sm-6">
+          <label for="mesafe" class="form-label">Mesafe (km)</label>
+          <input type="text" id="mesafe" class="form-control" placeholder="Örn: 350" inputmode="decimal" />
+          <div class="invalid-feedback">Pozitif bir değer girin.</div>
+        </div>
+        <div class="col-sm-6">
+          <label for="yolcu" class="form-label">Yolcu Sayısı</label>
+          <input type="number" id="yolcu" class="form-control" value="1" min="1" step="1" />
+          <div class="invalid-feedback">En az 1 olmalı.</div>
+        </div>
+      </div>
+
+      <button id="calcBtn" type="button" class="btn btn-primary w-100 mt-3">Hesapla</button>
+
+      <div id="sonuc" class="mt-3 p-3 border rounded fade-in" role="status" aria-live="polite">
+        Sonuç burada görünecek
+      </div>
+
+      <canvas id="historyChart" class="mt-3" height="120" aria-label="Maliyet geçmişi grafiği" role="img"></canvas>
+    </section>
+
+    <!-- Araç Bilgileri -->
+    <section class="card-like p-3">
+      <h2 id="vehicleTitle" class="h4 mb-3">Araç Bilgileri</h2>
+
+      <div class="mb-3">
+        <label for="model" class="form-label">Araç Modeli</label>
+        <select id="model" class="form-select" aria-describedby="vehicleHelp"></select>
+        <div id="vehicleHelp" class="form-text">Listeden seçin veya yeni model ekleyin.</div>
+      </div>
+
+      <div class="input-group mb-3">
+        <input type="text" id="newModel" class="form-control" placeholder="Marka Model" />
+        <button id="addVehicle" type="button" class="btn btn-outline-primary">Araç Ekle</button>
+      </div>
+
+      <div id="aracForm" class="row g-3">
+        <div class="col-md-6">
+          <label for="lastikTarihi" class="form-label">Lastik Değişim Tarihi</label>
+          <input type="date" id="lastikTarihi" class="form-control" />
+        </div>
+        <div class="col-md-6">
+          <label for="lastikKm" class="form-label">Lastik Değişim Kilometresi</label>
+          <input type="number" id="lastikKm" class="form-control" min="0" step="1" />
+        </div>
+        <div class="col-md-6">
+          <label for="akuTarihi" class="form-label">Akü Değişim Tarihi</label>
+          <input type="date" id="akuTarihi" class="form-control" />
+        </div>
+        <div class="col-md-6">
+          <label for="bakimTarihi" class="form-label">Bakım Tarihi</label>
+          <input type="date" id="bakimTarihi" class="form-control" />
+        </div>
+        <div class="col-12">
+          <button id="saveVehicle" type="button" class="btn btn-primary w-100">Kaydet</button>
+        </div>
+      </div>
+
+      <div id="aracBilgiSonuc" class="mt-3 p-3 border rounded">Bilgiler burada görünecek</div>
+    </section>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const langData = {
-      tr:{
-        calc:'Hesapla',
-        result:'Sonuç burada görünecek',
-        vehicleInfo:'Araç Bilgileri',
-        download:'Verilerimi İndir'
+    // ====== Sabitler & Anahtarlar ======
+    const historyKey = 'gecmisHesap';
+    const vehicleKey = 'araclar';
+    const formKey    = 'formData';
+    const themeKey   = 'theme';
+    const langKey    = 'lang';
+
+    const inputs = ['tuketim','fiyat','mesafe','yolcu'];
+
+    const i18n = {
+      tr: {
+        calcTitle: 'Yol Bilgisayarı',
+        vehicleTitle: 'Araç Bilgileri',
+        calc: 'Hesapla',
+        result: 'Sonuç burada görünecek',
+        export: 'Verileri Dışa Aktar (CSV)',
+        clear: 'Geçmişi Temizle',
+        select: 'Seçiniz',
+        savedNone: 'Henüz kayıt yok.',
+        edit: 'Güncelle'
       },
-      en:{
-        calc:'Calculate',
-        result:'Result will appear here',
-        vehicleInfo:'Vehicle Info',
-        download:'Download Data'
+      en: {
+        calcTitle: 'Trip Computer',
+        vehicleTitle: 'Vehicle Info',
+        calc: 'Calculate',
+        result: 'Result will appear here',
+        export: 'Export Data (CSV)',
+        clear: 'Clear History',
+        select: 'Select',
+        savedNone: 'No record yet.',
+        edit: 'Edit'
       }
     };
 
-    const inputs=['tuketim','fiyat','mesafe','yolcu'];
-    const historyKey='gecmisHesap';
-    const vehicleKey='araclar';
-    const formKey='formData';
-    const themeKey='theme';
-    const langKey='lang';
+    // ====== Yardımcılar ======
+    const qs  = (s, r=document) => r.querySelector(s);
+    const qsa = (s, r=document) => [...r.querySelectorAll(s)];
+    const themeColor = () => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
 
-    function init(){
-      loadTheme();
-      loadLang();
+    function normalizeDecimal(v) {
+      // Türkçe virgül desteği: "6,5" -> "6.5"
+      if (typeof v !== 'string') v = String(v ?? '');
+      return v.replace(',', '.').replace(/[^\d.]/g, '');
+    }
+    function toPosFloat(el) {
+      const n = parseFloat(normalizeDecimal(el.value));
+      if (Number.isFinite(n) && n > 0) return n;
+      return null;
+    }
+    function showInvalid(el, cond) {
+      el.classList.toggle('is-invalid', !cond);
+    }
+
+    // ====== Tema & Dil ======
+    function initTheme() {
+      const saved = localStorage.getItem(themeKey);
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      qs('#themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem(themeKey, next);
+      qs('#themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+      if (window.historyChart) { // grafiği tema rengine göre güncelle
+        window.historyChart.data.datasets[0].borderColor = themeColor();
+        window.historyChart.update();
+      }
+    }
+
+    function setLang(l) {
+      localStorage.setItem(langKey, l);
+      const t = i18n[l];
+
+      qs('#calcTitle').textContent    = t.calcTitle;
+      qs('#vehicleTitle').textContent = t.vehicleTitle;
+      qs('#calcBtn').textContent      = t.calc;
+      qs('#exportBtn').textContent    = t.export;
+      qs('#clearHistoryBtn').textContent = t.clear;
+      qs('#sonuc').textContent        = t.result;
+
+      const select = qs('#model');
+      if (!select.options.length) select.innerHTML = `<option value="">${t.select}</option>`;
+      qs('#langBtn').textContent = l === 'tr' ? 'EN' : 'TR';
+    }
+    function initLang() {
+      const l = localStorage.getItem(langKey) || 'tr';
+      setLang(l);
+    }
+    function toggleLang() {
+      const current = localStorage.getItem(langKey) || 'tr';
+      setLang(current === 'tr' ? 'en' : 'tr');
+    }
+
+    // ====== Form Kaydet/Yükle ======
+    function saveFormData() {
+      const data = {};
+      inputs.forEach(id => data[id] = qs('#' + id).value);
+      localStorage.setItem(formKey, JSON.stringify(data));
+    }
+    function loadFormData() {
+      const raw = localStorage.getItem(formKey);
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      inputs.forEach(id => { if (obj[id] != null) qs('#' + id).value = obj[id]; });
+    }
+
+    // ====== Hesaplama ======
+    function hesapla() {
+      const elT = qs('#tuketim');
+      const elF = qs('#fiyat');
+      const elM = qs('#mesafe');
+      const elY = qs('#yolcu');
+
+      const tuketimVal = toPosFloat(elT);
+      const fiyatVal   = toPosFloat(elF);
+      const mesafeVal  = toPosFloat(elM);
+      const yolcuVal   = Math.max(1, parseInt(elY.value || '1', 10));
+
+      showInvalid(elT, !!tuketimVal);
+      showInvalid(elF, !!fiyatVal);
+      showInvalid(elM, !!mesafeVal);
+      showInvalid(elY, Number.isInteger(yolcuVal) && yolcuVal >= 1);
+      if (!tuketimVal || !fiyatVal || !mesafeVal || !(yolcuVal >= 1)) return;
+
+      const toplamLitre = (tuketimVal * mesafeVal) / 100;
+      const toplamTutar = toplamLitre * fiyatVal;
+      const kisiBasi    = toplamTutar / yolcuVal;
+      const co2         = toplamLitre * 2.31;
+
+      const s = qs('#sonuc');
+      s.classList.remove('show');
+      s.innerHTML = `
+        🔹 Tüketim: <strong>${toplamLitre.toFixed(2)} L</strong><br>
+        🔸 Maliyet: <strong>${toplamTutar.toFixed(2)} TL</strong><br>
+        👥 Kişi Başı: <strong>${kisiBasi.toFixed(2)} TL</strong><br>
+        🌍 ≈ ${co2.toFixed(1)} kg CO₂
+      `;
+      setTimeout(() => s.classList.add('show'), 10);
+
+      // geçmişe kaydet
+      const idx = qs('#model').value;
+      const vehicles = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
+      const model = vehicles[idx]?.model || '';
+      saveHistory({
+        model,
+        tuketim: tuketimVal,
+        fiyat: fiyatVal,
+        mesafe: mesafeVal,
+        yolcu: yolcuVal,
+        toplamTutar,
+        tarih: new Date().toISOString()
+      });
+      renderChart();
+      saveFormData();
+    }
+
+    function saveHistory(item) {
+      const arr = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      arr.push(item);
+      localStorage.setItem(historyKey, JSON.stringify(arr));
+    }
+
+    function renderChart() {
+      const arr = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      const ctx = qs('#historyChart').getContext('2d');
+      if (window.historyChart) window.historyChart.destroy();
+      if (!arr.length) return;
+
+      window.historyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: arr.map(a => new Date(a.tarih).toLocaleString()),
+          datasets: [{
+            label: 'Maliyet (TL)',
+            data: arr.map(a => a.toplamTutar),
+            borderWidth: 2,
+            borderColor: themeColor(),
+            pointRadius: 2,
+            tension: 0.25
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    // ====== Araç Bilgileri ======
+    function loadVehicles() {
+      const select = qs('#model');
+      const stored = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
+      const lang = localStorage.getItem(langKey) || 'tr';
+      select.innerHTML = `<option value="">${i18n[lang].select}</option>`;
+      stored.forEach((v, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = v.model;
+        select.appendChild(opt);
+      });
+      select.addEventListener('change', gosterAracBilgileri);
+    }
+
+    function addVehicle() {
+      const input = qs('#newModel');
+      const model = input.value.trim();
+      if (!model) return;
+      const vehicles = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
+      if (!vehicles.some(v => v.model.toLowerCase() === model.toLowerCase())) {
+        vehicles.push({ model });
+        localStorage.setItem(vehicleKey, JSON.stringify(vehicles));
+        input.value = '';
+        loadVehicles();
+        qs('#model').value = vehicles.length - 1;
+        gosterAracBilgileri();
+      } else {
+        input.focus();
+      }
+    }
+
+    function kaydetAracBilgileri() {
+      const idx = qs('#model').value;
+      if (idx === '') return;
+      const vehicles = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
+      vehicles[idx].info = {
+        lastikTarihi: lastikTarihi.value || '',
+        lastikKm:     lastikKm.value || '',
+        akuTarihi:    akuTarihi.value || '',
+        bakimTarihi:  bakimTarihi.value || ''
+      };
+      localStorage.setItem(vehicleKey, JSON.stringify(vehicles));
+      gosterAracBilgileri();
+    }
+
+    function gosterAracBilgileri() {
+      const idx = qs('#model').value;
+      const container = qs('#aracBilgiSonuc');
+      const form = qs('#aracForm');
+      const vehicles = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
+      const lang = localStorage.getItem(langKey) || 'tr';
+      if (idx === '' || !vehicles[idx] || !vehicles[idx].info) {
+        form.style.display = 'block';
+        qs('#saveVehicle').textContent = 'Kaydet';
+        container.textContent = i18n[lang].savedNone;
+        return;
+      }
+      const info = vehicles[idx].info;
+      form.style.display = 'none';
+      container.innerHTML = `
+        🚗 Model: <strong>${vehicles[idx].model}</strong><br>
+        🔧 Lastik Tarihi: <strong>${info.lastikTarihi || '-'}</strong><br>
+        🔋 Akü Tarihi: <strong>${info.akuTarihi || '-'}</strong><br>
+        🏁 Lastik KM: <strong>${info.lastikKm || '-'}</strong><br>
+        🔨 Bakım Tarihi: <strong>${info.bakimTarihi || '-'}</strong><br>
+        <button id="editInfo" type="button" class="btn btn-secondary mt-2">${i18n[lang].edit}</button>
+      `;
+      qs('#editInfo').addEventListener('click', () => {
+        form.style.display = 'block';
+        lastikTarihi.value = info.lastikTarihi || '';
+        akuTarihi.value    = info.akuTarihi || '';
+        lastikKm.value     = info.lastikKm || '';
+        bakimTarihi.value  = info.bakimTarihi || '';
+        qs('#saveVehicle').textContent = i18n[lang].edit;
+        container.textContent = '';
+      }, { once:true });
+    }
+
+    // ====== Dışa Aktar / Temizle ======
+    function exportCSV() {
+      const arr = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      if (!arr.length) return;
+      const headers = ['tarih','model','tuketim','fiyat','mesafe','yolcu','toplamTutar'];
+      const rows = arr.map(o => headers.map(h => (o[h] ?? '')).join(','));
+      const csv = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'yol-bilgisayari.csv';
+      document.body.appendChild(a); a.click();
+      a.remove(); URL.revokeObjectURL(url);
+    }
+    function clearHistory() {
+      localStorage.removeItem(historyKey);
+      if (window.historyChart) window.historyChart.destroy();
+    }
+
+    // ====== Olaylar & Başlat ======
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initLang();
       loadVehicles();
       loadFormData();
       gosterAracBilgileri();
       renderChart();
-    }
 
-    function loadTheme(){
-      const saved=localStorage.getItem(themeKey)||'dark';
-      document.documentElement.setAttribute('data-theme',saved);
-      document.getElementById('themeBtn').textContent=saved==='dark'?'☀️':'🌙';
-    }
-
-    function toggleTheme(){
-      const current=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';
-      const next=current==='dark'?'light':'dark';
-      document.documentElement.setAttribute('data-theme',next);
-      localStorage.setItem(themeKey,next);
-      document.getElementById('themeBtn').textContent=next==='dark'?'☀️':'🌙';
-    }
-
-    function loadLang(){
-      const current=localStorage.getItem(langKey)||'tr';
-      setLang(current);
-    }
-
-    function setLang(lng){
-      localStorage.setItem(langKey,lng);
-      document.getElementById('calcBtn').textContent=langData[lng].calc;
-      document.getElementById('downloadBtn').textContent=langData[lng].download;
-      document.querySelectorAll('h2')[1].textContent=langData[lng].vehicleInfo;
-      document.getElementById('langBtn').textContent=lng==='tr'?'EN':'TR';
-    }
-
-    function toggleLang(){
-      const current=localStorage.getItem(langKey)||'tr';
-      setLang(current==='tr'?'en':'tr');
-    }
-
-    function saveFormData(){
-      const data={};
-      inputs.forEach(id=>data[id]=document.getElementById(id).value);
-      localStorage.setItem(formKey,JSON.stringify(data));
-    }
-
-    function loadFormData(){
-      const data=localStorage.getItem(formKey);
-      if(data){
-        const obj=JSON.parse(data);
-        inputs.forEach(id=>{
-          if(obj[id]) document.getElementById(id).value=obj[id];
-        });
-      }
-    }
-
-    function hesapla(){
-    // 1. Validasyon
-    let valid = true;
-    inputs.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el.value) {
-        el.classList.add('is-invalid');
-        valid = false;
-      } else {
-        el.classList.remove('is-invalid');
-      }
+      qs('#themeBtn').addEventListener('click', toggleTheme);
+      qs('#langBtn').addEventListener('click', toggleLang);
+      qs('#calcBtn').addEventListener('click', hesapla);
+      qs('#saveVehicle').addEventListener('click', kaydetAracBilgileri);
+      qs('#addVehicle').addEventListener('click', addVehicle);
+      qs('#exportBtn').addEventListener('click', exportCSV);
+      qs('#clearHistoryBtn').addEventListener('click', clearHistory);
     });
-    if (!valid) return;
 
-    // 2. Eleman referanslarını al ve sayısal değerlere dönüştür
-    const tuketimEl = document.getElementById('tuketim');
-    const fiyatEl   = document.getElementById('fiyat');
-    const mesafeEl  = document.getElementById('mesafe');
-    const yolcuEl   = document.getElementById('yolcu');
-
-    const tuketimVal = parseFloat(tuketimEl.value);
-    const fiyatVal   = parseFloat(fiyatEl.value);
-    const mesafeVal  = parseFloat(mesafeEl.value);
-    const yolcuVal   = parseFloat(yolcuEl.value) || 1;
-
-    // 3. Hesaplamalar
-    const toplamLitre = (tuketimVal * mesafeVal) / 100;
-    const toplamTutar = toplamLitre * fiyatVal;
-    const kisiBasi    = toplamTutar / yolcuVal;
-    const co2         = toplamLitre * 2.31;
-
-    // 4. Sonucu göster
-    const sonucEl = document.getElementById('sonuc');
-    sonucEl.style.opacity = 0;
-    sonucEl.innerHTML = `
-      🔹 Tüketim: <strong>${toplamLitre.toFixed(2)} L</strong><br>
-      🔸 Maliyet: <strong>${toplamTutar.toFixed(2)} TL</strong><br>
-      👥 Kişi Başı: <strong>${kisiBasi.toFixed(2)} TL</strong><br>
-      🌍 ≈ ${co2.toFixed(1)} kg CO₂
-    `;
-    setTimeout(() => sonucEl.style.opacity = 1, 10);
-
-    // 5. Geçmişe kaydet ve grafik güncelle
-    const idx = document.getElementById('model').value;
-    const vehicles = JSON.parse(localStorage.getItem(vehicleKey) || '[]');
-    const model = vehicles[idx] ? vehicles[idx].model : '';
-    saveHistory({
-      model,
-      tuketim: tuketimVal,
-      fiyat: fiyatVal,
-      mesafe: mesafeVal,
-      yolcu: yolcuVal,
-      toplamTutar,
-      tarih: new Date().toISOString()
-    });
-    renderChart();
-    saveFormData();
-    }
-
-    function saveHistory(item){
-      const arr=JSON.parse(localStorage.getItem(historyKey)||'[]');
-      arr.push(item);
-      localStorage.setItem(historyKey,JSON.stringify(arr));
-    }
-
-    function renderChart(){
-      const arr=JSON.parse(localStorage.getItem(historyKey)||'[]');
-      const ctx=document.getElementById('historyChart').getContext('2d');
-      if(window.historyChart) window.historyChart.destroy();
-      if(!arr.length) return;
-      window.historyChart=new Chart(ctx,{
-        type:'line',
-        data:{
-          labels:arr.map(a=>new Date(a.tarih).toLocaleDateString()),
-          datasets:[{label:'Maliyet (TL)',data:arr.map(a=>a.toplamTutar),borderColor:'var(--accent)',tension:0.2}]},
-        options:{scales:{y:{beginAtZero:true}}}
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
       });
-    }
-
-    function kaydetAracBilgileri(){
-      const idx=document.getElementById('model').value;
-      if(idx==='') return;
-      const vehicles=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
-        vehicles[idx].info={
-          lastikTarihi:lastikTarihi.value,
-          lastikKm:lastikKm.value,
-          akuTarihi:akuTarihi.value,
-          bakimTarihi:bakimTarihi.value
-        };
-      localStorage.setItem(vehicleKey,JSON.stringify(vehicles));
-      gosterAracBilgileri();
-    }
-
-    function gosterAracBilgileri(){
-      const idx=document.getElementById('model').value;
-      const container=document.getElementById('aracBilgiSonuc');
-      const form=document.getElementById('aracForm');
-      const vehicles=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
-      if(idx===''||!vehicles[idx]||!vehicles[idx].info){
-        form.style.display='block';
-        document.getElementById('saveVehicle').textContent='Kaydet';
-        container.textContent='Henüz kayıt yok.';
-        return;
-      }
-      const info=vehicles[idx].info;
-      form.style.display='none';
-      container.innerHTML=`🚗 Model: <strong>${vehicles[idx].model}</strong><br>🔧 Lastik Tarihi: <strong>${info.lastikTarihi||'-'}</strong><br>🔋 Akü Tarihi: <strong>${info.akuTarihi||'-'}</strong><br>🏁 Lastik KM: <strong>${info.lastikKm||'-'}</strong><br>🔨 Bakım Tarihi: <strong>${info.bakimTarihi||'-'}</strong><br><button id="editInfo" type="button" class="btn btn-secondary mt-2">Güncelle</button>`;
-      document.getElementById('editInfo').addEventListener('click',()=>{
-        form.style.display='block';
-        lastikTarihi.value=info.lastikTarihi||'';
-        akuTarihi.value=info.akuTarihi||'';
-        lastikKm.value=info.lastikKm||'';
-        bakimTarihi.value=info.bakimTarihi||'';
-        document.getElementById('saveVehicle').textContent='Güncelle';
-        container.textContent='';
-      });
-    }
-
-    function loadVehicles(){
-      const select=document.getElementById('model');
-      const stored=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
-      select.innerHTML='<option value="">Seçiniz</option>';
-      stored.forEach((v,i)=>{
-        const opt=document.createElement('option');
-        opt.value=i;
-        opt.textContent=v.model;
-        select.appendChild(opt);
-      });
-      select.addEventListener('change',gosterAracBilgileri);
-    }
-
-    function addVehicle(){
-      const input=document.getElementById('newModel');
-      const model=input.value.trim();
-      if(!model) return;
-      const vehicles=JSON.parse(localStorage.getItem(vehicleKey)||'[]');
-      vehicles.push({model});
-      localStorage.setItem(vehicleKey,JSON.stringify(vehicles));
-      input.value='';
-      loadVehicles();
-      const select=document.getElementById('model');
-      select.value=vehicles.length-1;
-      gosterAracBilgileri();
-    }
-
-    document.getElementById('themeBtn').addEventListener('click',toggleTheme);
-    document.getElementById('langBtn').addEventListener('click',toggleLang);
-    document.getElementById('calcBtn').addEventListener('click',hesapla);
-    document.getElementById('saveVehicle').addEventListener('click',kaydetAracBilgileri);
-    document.getElementById('addVehicle').addEventListener('click',addVehicle);
-    window.addEventListener('DOMContentLoaded',init);
-
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('service-worker.js');
     }
   </script>
 </body>
